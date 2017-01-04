@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0' xmlns:atom='http://www.w3.org/2005/Atom'>
+<channel>
+<atom:link href='https://derhowie.github.io' rel='self' type='application/rss+xml'/>
+<title>
+A Blog Concerning Things
+</title>
+<link>
+https://derhowie.github.io
+</link>
+<description>
+This is a blog concerning things.
+</description>
+<lastBuildDate>
+Tue, 03 Jan 2017 21:39:06 -0500
+</lastBuildDate>
+<generator>
+clj-rss
+</generator>
+<item>
+<guid>
+https://derhowie.github.io/posts/2016-12-14/
+</guid>
+<link>
+https://derhowie.github.io/posts/2016-12-14/
+</link>
+<title>
+Expandable Component Wrapper with Reagent and Reanimated
+</title>
+<description>
+&lt;p&gt;Building pluggable, reusable reagent components that provide small pieces of functionality throughout your application can be very handy. In this post I will explain my implementation of a simple component wrapper that  expands/collapses other components in a reagent application. I used Timothy Pratley's &lt;a href='https://github.com/timothypratley/reanimated'&gt;Reanimated&lt;/a&gt; library for this component's animation.&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;dependencies&quot;&gt;&lt;/a&gt;Dependencies&lt;/h2&gt;&lt;pre&gt;&lt;code class=&quot;clojure&quot;&gt;;; project.clj
+
+&amp;#40;defproject sweet-project &amp;quot;0.1.0-SNAPSHOT&amp;quot;
+  :dependencies
+    &amp;#91;&amp;#91;org.clojure/clojure &amp;quot;1.9.0-alpha13&amp;quot;&amp;#93;
+    &amp;#91;org.clojure/clojurescript &amp;quot;1.9.229&amp;quot;&amp;#93;
+    &amp;#91;reagent &amp;quot;0.6.0&amp;quot; :exclusions &amp;#91;cljsjs/react&amp;#93;&amp;#93;
+    &amp;#91;reanimated &amp;quot;0.5.0&amp;quot;&amp;#93;&amp;#93;&amp;#41;
+
+...
+
+;; global.cljs
+
+&amp;#40;ns sweet-project.components.global
+  &amp;#40;:require
+    &amp;#91;reagent.core :as r&amp;#93;
+    &amp;#91;reanimated.core :as reanimated&amp;#93;&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Both libraries depend on React, so make sure to exclude a version.&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;component&amp;#95;setup&quot;&gt;&lt;/a&gt;Component Setup&lt;/h2&gt;&lt;pre&gt;&lt;code class=&quot;clojure&quot;&gt;;; global.cljs
+
+...
+
+&amp;#40;defn expandable-wrapper
+  ;; destructure the keys inside of the 'opts' paramater that we will hand to our component
+  &amp;#91;{:keys &amp;#91;content expanded? toggle-component block?&amp;#93; :as opts}&amp;#93;
+        ;; create an arbitrary id so we can access the content's height later
+  &amp;#40;let &amp;#91;content-id         &amp;#40;gensym&amp;#41;
+        ;; store the expanded? param into an atom: this determines if the component is expanded by default
+        expanded?          &amp;#40;r/atom expanded?&amp;#41;
+        ;; grab the content's height on the DOM
+        get-content-offset #&amp;#40;.-offsetHeight &amp;#40;.getElementById js/document content-id&amp;#41;&amp;#41;
+        container-height   &amp;#40;r/atom nil&amp;#41;
+        animated-height    &amp;#40;reanimated/interpolate-to container-height&amp;#41;
+        ;; check expanded? param and set initial height of the wrapper; also used to adjust wrapper height on window resize events
+        init-height        #&amp;#40;reset! container-height &amp;#40;if @expanded? &amp;#40;get-content-offset&amp;#41; 0&amp;#41;&amp;#41;
+        animate-container  &amp;#40;fn &amp;#91;&amp;#93;
+                             &amp;#40;reset! container-height &amp;#40;if @expanded? 0 &amp;#40;get-content-offset&amp;#41;&amp;#41;&amp;#41;
+                             &amp;#40;swap! expanded? not&amp;#41;&amp;#41;&amp;#93;
+    ;; open up a 'form-3' reagent component so that we can access the 'component-did-mount'/'component-will-unmount' life-cyle methods
+    &amp;#40;r/create-class
+      {:component-did-mount    &amp;#40;fn &amp;#91;&amp;#93;
+                                 ;; set the container-height atom value after the elements have mounted on the DOM
+                                 &amp;#40;init-height&amp;#41;
+                                 ;; window resizing can change the height of the content, this will take care of adjustments
+                                 &amp;#40;.addEventListener js/window &amp;quot;resize&amp;quot; init-height&amp;#41;&amp;#41;
+       :component-will-unmount &amp;#40;fn  &amp;#91;&amp;#93;
+                                 ;; take resize listener off the browser window when this component leaves the DOM
+                                 &amp;#40;.removeEventListener js/window &amp;quot;resize&amp;quot; init-height&amp;#41;&amp;#41;
+       :reagent-render         &amp;#40;fn &amp;#91;&amp;#93;
+                                 &amp;#91;:div
+                                   ;; this div wraps the toggle-component and provides the on-click handler for toggling height between 100% and 0px
+                                   &amp;#91;:div
+                                     {:on-click #&amp;#40;animate-container&amp;#41;
+                                      ;; the 'block?' parameter determines if the toggle-component has a display value of 'block'
+                                      :style {:display &amp;#40;if block?
+                                                         &amp;quot;block&amp;quot;
+                                                         &amp;quot;inline-block&amp;quot;&amp;#41;}}
+                                     &amp;#40;toggle-component&amp;#41;&amp;#93;
+                                   &amp;#91;:div
+                                     {:style {:height @animated-height
+                                              :overflow &amp;quot;hidden&amp;quot;}}
+                                     &amp;#91;:div
+                                       ;; place content-id on this div to track the offsetHeight of your content using 'get-content-offset'
+                                       {:id content-id}
+                                       &amp;#40;content&amp;#41;&amp;#93;&amp;#93;&amp;#93;&amp;#41;}&amp;#41;&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;To setup Reanimated I create an animation atom and point it at the value I am interested in animating. In this case I want the &lt;code&gt;animated-height&lt;/code&gt; atom to be triggered whenever the &lt;code&gt;container-height&lt;/code&gt; atom changes. In the render method I deref the animation atom (&lt;code&gt;:height @animated-height&lt;/code&gt;) to assign height to the wrapper. &lt;br&gt;&lt;br&gt; I don't check the &lt;code&gt;expanded?&lt;/code&gt; param and set the &lt;code&gt;container-height&lt;/code&gt; atom's value until the component has mounted on the DOM, because &lt;code&gt;get-content-offset&lt;/code&gt; will return &lt;code&gt;null&lt;/code&gt; if it's called beforehand.&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;usage&quot;&gt;&lt;/a&gt;Usage&lt;/h2&gt;&lt;pre&gt;&lt;code class=&quot;clojure&quot;&gt;&amp;#40;ns sweet-project.a-page-concerning-things
+  &amp;#40;:require &amp;#91;sweet-project.components.global :as g&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;defn my-toggle
+  &amp;#91;&amp;#93;
+  &amp;#91;:div.some-btn-class
+    &amp;quot;Expand Me&amp;quot;&amp;#93;&amp;#41;
+
+&amp;#40;defn sweet-content
+  &amp;#91;&amp;#93;
+  &amp;#91;:div
+    &amp;#91;:h1 &amp;quot;My List of Best Friends&amp;quot;&amp;#93;
+      &amp;#91;:ul
+        &amp;#91;:li &amp;quot;Mr. Lamp&amp;quot;&amp;#93;
+        &amp;#91;:li &amp;quot;Madame Drapes&amp;quot;&amp;#93;
+        &amp;#91;:li &amp;quot;Jerry from 7-11&amp;quot;&amp;#93;&amp;#93;&amp;#93;&amp;#41;
+
+&amp;#40;defn sweet-list-of-many-heights
+  &amp;#91;&amp;#93;
+  &amp;#91;g/expandable-wrapper {:content sweet-content
+                       :expanded? true
+                       :toggle-component my-toggle
+                       :block? false}&amp;#93;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a name=&quot;summary&quot;&gt;&lt;/a&gt;Summary&lt;/h2&gt;&lt;p&gt;This may seem like a lot of code for a pretty small feature, but this component is very flexible. No height needs to be hard-coded to achieve the animation so you can use content of any size and it will work. Anything can be placed in as a toggle component and the window-resize handler keeps everything looking nice.&lt;/p&gt;&lt;h3&gt;&lt;a name=&quot;to&amp;#95;do&quot;&gt;&lt;/a&gt;TO DO&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Right now I have not thought of a clean way to support nesting expandable components within other expandable components. The parent expandable wrapper does not currently have a way of dynamically detecting a height change in the content after &lt;code&gt;:component-did-mount&lt;/code&gt;. &lt;br&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;
+</description>
+<enclosure>
+
+</enclosure>
+<pubDate>
+Wed, 14 Dec 2016 00:00:00 -0500
+</pubDate>
+</item>
+</channel>
+</rss>

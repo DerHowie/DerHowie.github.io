@@ -1,0 +1,231 @@
+h1, h2, h3 {
+    font-family: 'Scope One', sans-serif;
+}
+
+body {
+    color: #222;
+    font-family: 'Source Code Pro', serif;
+    font-size: 14px;
+		background-color: #fff;
+}
+
+.container-fluid {
+}
+
+a {
+	color: #2d9eff;
+}
+
+a:hover {
+	color: #555;
+}
+
+.right {
+    float: right;
+    text-align: right;
+}
+
+.blue {
+	color: #2d9eff !important;
+}
+
+.gray {
+	color: #555 !important;
+}
+
+.date {
+	font-family: "Source Code Pro", monospace !important;
+}
+
+.date-small {
+	font-size: 14px;
+	display: inline-block;
+	color: #555;
+}
+
+.mono {
+	font-family: "Source Code Pro", monospace;
+}
+
+.archive-title {
+	color: #2d9eff;
+	font-size: 18px;
+	margin-right: -10px;
+}
+
+.archive-list-item {
+	list-style: none;
+}
+
+.archive-title:hover {
+	color: #555 !important;
+	text-decoration: none;
+}
+
+.navbar {
+    border-radius: 0;
+    box-shadow: 0 0 0 0,0 6px 12px rgba(34,34,34,0.3);
+}
+
+.navbar-default {
+    background-color: #222;
+    border: none;
+}
+
+.navbar-default .navbar-brand {
+    color: #eee;
+		font-size: 26px !important;
+    font-family: 'Scope One', sans-serif;
+		margin-left: 25px !important;
+}
+
+.navbar-default .navbar-brand:hover {
+    color: #fff;
+}
+
+.navbar-default .navbar-toggle:hover{
+    background-color: #3d80ba;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #fff;
+}
+
+#header-links {
+	margin: 5px 0 20px;
+}
+
+#header-links a {
+		font-family: "Scope One";
+		font-size: 18px;
+		color: #fff !important;
+}
+
+#header-links a:hover {
+	text-decoration: none;
+	color: #555 !important;
+}
+
+#header-links .active a {
+		color: #555 !important;
+}
+
+#header-links li {
+	list-style: none !important;
+	display: inline-block;
+}
+
+#sidebar {
+    margin-left: 15px;
+    margin-top: 50px;
+}
+
+#content {
+    background-color: #222;
+		color: #eee;
+		box-shadow: 0 0 0 0, 2px 4px 12px rgba(34,34,34,0.7);
+}
+
+#content img {
+    max-width: 100%;
+    height: auto;
+}
+
+footer {
+    font-size: 14px;
+    text-align: center;
+    padding-top: 75px;
+    padding-bottom: 30px;
+}
+
+#post-tags {
+    margin-top: 30px;
+}
+
+#prev-next {
+    padding: 15px 0;
+}
+
+.post-header {
+    margin-bottom: 20px;
+}
+
+.post-header h2 {
+    font-size: 32px;
+}
+
+#post-meta {
+    font-size: 16px;
+		font-family: "Source Code Pro", sans-serif;
+    color: #777;
+}
+
+#page-header {
+    border-bottom: 1px solid #dbdbdb;
+    margin-bottom: 20px;
+}
+
+#page-header h2 {
+    font-size: 32px;
+}
+
+pre {
+    overflow-x: auto;
+}
+
+code {
+	font-size: 14px;
+	font-family: "Source Code Pro", monospace;
+}
+
+code:not(.hljs) {
+	color: #fff;
+	background-color: #333 !important;
+}
+
+pre code {
+    overflow-wrap: normal;
+    white-space: pre;
+		font-size: 14px;
+}
+
+pre, code, .hljs {
+    background-color: #222;
+}
+
+hr {
+	border-top: solid 1px #555;
+}
+
+@media (min-width: 768px) {
+    .navbar {
+        min-height: 70px;
+    }
+    .navbar-nav>li>a {
+        padding: 30px 20px;
+    }
+    .navbar-default .navbar-brand {
+        font-size: 36px;
+        padding: 25px 15px;
+    }
+    #content{
+        margin-top: 30px;
+        padding: 30px 40px;
+    }
+}
+
+@media (max-width: 767px) {
+    body{
+        font-size: 14px;
+    }
+    .navbar-default .navbar-brand {
+        font-size: 30px;
+    }
+    #content{
+        padding: 15px;
+    }
+    #post-meta .right {
+        float:left;
+        text-align: left;
+    }
+}

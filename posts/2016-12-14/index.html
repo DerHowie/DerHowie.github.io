@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>A Blog Concerning Things: Expandable Component Wrapper with Reagent and Reanimated</title>
+    <link rel="canonical" href="https://derhowie.github.io/posts/2016-12-14/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:200|Scope+One" rel="stylesheet">
+		<link href="/css/ir-black.css" rel="stylesheet" type="text/css" />
+    <link href="/css/screen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand blue" href="/">A Blog Concerning Things</a>
+        </div>
+    </div>
+		<div class="container-fluid">
+			<div id="header-links">
+					<ul>
+						<li ><a href="/">Home</a></li>
+						<li class="blue">|</li>
+						<li ><a href="/archives/">Posts</a></li>
+					</ul>
+				</div>
+		</div>
+</nav>
+
+
+<div class="container-fluid">
+
+
+    <div class="row">
+        <div class="col-lg-9">
+            <div id="content">
+                
+<div id="post">
+    <div class="post-header">
+    <div id="post-meta" class="row">
+        <div class="col-lg-6">December 14, 2016</div>
+        
+    </div>
+    <h2>Expandable Component Wrapper with Reagent and Reanimated</h2>
+</div>
+<div>
+    
+    <p>Building pluggable, reusable reagent components that provide small pieces of functionality throughout your application can be very handy. In this post I will explain my implementation of a simple component wrapper that  expands/collapses other components in a reagent application. I used Timothy Pratley's <a href='https://github.com/timothypratley/reanimated'>Reanimated</a> library for this component's animation.</p><h2><a name="dependencies"></a>Dependencies</h2><pre><code class="clojure">;; project.clj
+
+&#40;defproject sweet-project &quot;0.1.0-SNAPSHOT&quot;
+  :dependencies
+    &#91;&#91;org.clojure/clojure &quot;1.9.0-alpha13&quot;&#93;
+    &#91;org.clojure/clojurescript &quot;1.9.229&quot;&#93;
+    &#91;reagent &quot;0.6.0&quot; :exclusions &#91;cljsjs/react&#93;&#93;
+    &#91;reanimated &quot;0.5.0&quot;&#93;&#93;&#41;
+
+...
+
+;; global.cljs
+
+&#40;ns sweet-project.components.global
+  &#40;:require
+    &#91;reagent.core :as r&#93;
+    &#91;reanimated.core :as reanimated&#93;&#41;&#41;
+</code></pre><p>Both libraries depend on React, so make sure to exclude a version.</p><h2><a name="component&#95;setup"></a>Component Setup</h2><pre><code class="clojure">;; global.cljs
+
+...
+
+&#40;defn expandable-wrapper
+  ;; destructure the keys inside of the 'opts' paramater that we will hand to our component
+  &#91;{:keys &#91;content expanded? toggle-component block?&#93; :as opts}&#93;
+        ;; create an arbitrary id so we can access the content's height later
+  &#40;let &#91;content-id         &#40;gensym&#41;
+        ;; store the expanded? param into an atom: this determines if the component is expanded by default
+        expanded?          &#40;r/atom expanded?&#41;
+        ;; grab the content's height on the DOM
+        get-content-offset #&#40;.-offsetHeight &#40;.getElementById js/document content-id&#41;&#41;
+        container-height   &#40;r/atom nil&#41;
+        animated-height    &#40;reanimated/interpolate-to container-height&#41;
+        ;; check expanded? param and set initial height of the wrapper; also used to adjust wrapper height on window resize events
+        init-height        #&#40;reset! container-height &#40;if @expanded? &#40;get-content-offset&#41; 0&#41;&#41;
+        animate-container  &#40;fn &#91;&#93;
+                             &#40;reset! container-height &#40;if @expanded? 0 &#40;get-content-offset&#41;&#41;&#41;
+                             &#40;swap! expanded? not&#41;&#41;&#93;
+    ;; open up a 'form-3' reagent component so that we can access the 'component-did-mount'/'component-will-unmount' life-cyle methods
+    &#40;r/create-class
+      {:component-did-mount    &#40;fn &#91;&#93;
+                                 ;; set the container-height atom value after the elements have mounted on the DOM
+                                 &#40;init-height&#41;
+                                 ;; window resizing can change the height of the content, this will take care of adjustments
+                                 &#40;.addEventListener js/window &quot;resize&quot; init-height&#41;&#41;
+       :component-will-unmount &#40;fn  &#91;&#93;
+                                 ;; take resize listener off the browser window when this component leaves the DOM
+                                 &#40;.removeEventListener js/window &quot;resize&quot; init-height&#41;&#41;
+       :reagent-render         &#40;fn &#91;&#93;
+                                 &#91;:div
+                                   ;; this div wraps the toggle-component and provides the on-click handler for toggling height between 100% and 0px
+                                   &#91;:div
+                                     {:on-click #&#40;animate-container&#41;
+                                      ;; the 'block?' parameter determines if the toggle-component has a display value of 'block'
+                                      :style {:display &#40;if block?
+                                                         &quot;block&quot;
+                                                         &quot;inline-block&quot;&#41;}}
+                                     &#40;toggle-component&#41;&#93;
+                                   &#91;:div
+                                     {:style {:height @animated-height
+                                              :overflow &quot;hidden&quot;}}
+                                     &#91;:div
+                                       ;; place content-id on this div to track the offsetHeight of your content using 'get-content-offset'
+                                       {:id content-id}
+                                       &#40;content&#41;&#93;&#93;&#93;&#41;}&#41;&#41;&#41;
+</code></pre><p>To setup Reanimated I create an animation atom and point it at the value I am interested in animating. In this case I want the <code>animated-height</code> atom to be triggered whenever the <code>container-height</code> atom changes. In the render method I deref the animation atom (<code>:height @animated-height</code>) to assign height to the wrapper. <br><br> I don't check the <code>expanded?</code> param and set the <code>container-height</code> atom's value until the component has mounted on the DOM, because <code>get-content-offset</code> will return <code>null</code> if it's called beforehand.</p><h2><a name="usage"></a>Usage</h2><pre><code class="clojure">&#40;ns sweet-project.a-page-concerning-things
+  &#40;:require &#91;sweet-project.components.global :as g&#93;&#41;&#41;
+
+&#40;defn my-toggle
+  &#91;&#93;
+  &#91;:div.some-btn-class
+    &quot;Expand Me&quot;&#93;&#41;
+
+&#40;defn sweet-content
+  &#91;&#93;
+  &#91;:div
+    &#91;:h1 &quot;My List of Best Friends&quot;&#93;
+      &#91;:ul
+        &#91;:li &quot;Mr. Lamp&quot;&#93;
+        &#91;:li &quot;Madame Drapes&quot;&#93;
+        &#91;:li &quot;Jerry from 7-11&quot;&#93;&#93;&#93;&#41;
+
+&#40;defn sweet-list-of-many-heights
+  &#91;&#93;
+  &#91;g/expandable-wrapper {:content sweet-content
+                       :expanded? true
+                       :toggle-component my-toggle
+                       :block? false}&#93;&#41;
+</code></pre><h2><a name="summary"></a>Summary</h2><p>This may seem like a lot of code for a pretty small feature, but this component is very flexible. No height needs to be hard-coded to achieve the animation so you can use content of any size and it will work. Anything can be placed in as a toggle component and the window-resize handler keeps everything looking nice.</p><h3><a name="to&#95;do"></a>TO DO</h3><ul><li>Right now I have not thought of a clean way to support nesting expandable components within other expandable components. The parent expandable wrapper does not currently have a way of dynamically detecting a height change in the content after <code>:component-did-mount</code>. <br><br></li></ul>
+</div>
+
+<div id="post-tags">
+    <b>Tags: </b>
+    
+    <a href="/tags/reagent/">reagent</a>
+    
+    <a href="/tags/clojurescript/">clojurescript</a>
+    
+</div>
+
+
+    <div id="prev-next">
+        
+        
+    </div>
+
+    
+
+
+</div>
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div id="sidebar">
+<!--                 <h3>Links</h3>
+                <ul id="links">
+                    <li><a href="http://cryogenweb.org/docs/home.html">Cryogen Docs</a></li>
+                    <li><a href="http://carmenla.me/blog/archives">Carmen's Blog</a></li>
+                    
+                    <li><a href="/pages/about/">About</a></li>
+                    
+                    <li><a href="/pages/another-page/">Another Page</a></li>
+                     -->
+                </ul>
+                
+                <div id="recent">
+                    <h3>Recent Posts</h3>
+                    <ul>
+                        
+                        <li><a href="/posts/2016-12-14/">Expandable Component Wrapper with Reagent and Reanimated</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div id="tags">
+                    <h3>Tags</h3>
+                    <ul>
+                        
+                        <li><a href="/tags/reagent/">reagent</a></li>
+                        
+                        <li><a href="/tags/clojurescript/">clojurescript</a></li>
+                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <footer>Copyright &copy; 2017 Christopher Howard
+        <p style="text-align: center;">Powered by <a href="http://cryogenweb.org">Cryogen</a></p></footer>
+</div>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="/js/highlight.pack.js" type="text/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
