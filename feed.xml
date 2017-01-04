@@ -12,7 +12,7 @@ https://derhowie.github.io
 This is a blog concerning things.
 </description>
 <lastBuildDate>
-Tue, 03 Jan 2017 21:39:06 -0500
+Tue, 03 Jan 2017 22:30:55 -0500
 </lastBuildDate>
 <generator>
 clj-rss
@@ -28,7 +28,7 @@ https://derhowie.github.io/posts/2016-12-14/
 Expandable Component Wrapper with Reagent and Reanimated
 </title>
 <description>
-&lt;p&gt;Building pluggable, reusable reagent components that provide small pieces of functionality throughout your application can be very handy. In this post I will explain my implementation of a simple component wrapper that  expands/collapses other components in a reagent application. I used Timothy Pratley's &lt;a href='https://github.com/timothypratley/reanimated'&gt;Reanimated&lt;/a&gt; library for this component's animation.&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;dependencies&quot;&gt;&lt;/a&gt;Dependencies&lt;/h2&gt;&lt;pre&gt;&lt;code class=&quot;clojure&quot;&gt;;; project.clj
+&lt;p&gt;Building pluggable, reusable reagent components that provide small pieces of functionality throughout your application can be very handy. In this post I will explain my implementation of a simple component wrapper that expands/collapses other components in a reagent application. I used Timothy Pratley's &lt;a href='https://github.com/timothypratley/reanimated'&gt;Reanimated&lt;/a&gt; library for this component's animation.&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;dependencies&quot;&gt;&lt;/a&gt;Dependencies&lt;/h2&gt;&lt;pre&gt;&lt;code class=&quot;clojure&quot;&gt;;; project.clj
 
 &amp;#40;defproject sweet-project &amp;quot;0.1.0-SNAPSHOT&amp;quot;
   :dependencies
@@ -115,7 +115,7 @@ Expandable Component Wrapper with Reagent and Reanimated
                        :expanded? true
                        :toggle-component my-toggle
                        :block? false}&amp;#93;&amp;#41;
-&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a name=&quot;summary&quot;&gt;&lt;/a&gt;Summary&lt;/h2&gt;&lt;p&gt;This may seem like a lot of code for a pretty small feature, but this component is very flexible. No height needs to be hard-coded to achieve the animation so you can use content of any size and it will work. Anything can be placed in as a toggle component and the window-resize handler keeps everything looking nice.&lt;/p&gt;&lt;h3&gt;&lt;a name=&quot;to&amp;#95;do&quot;&gt;&lt;/a&gt;TO DO&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Right now I have not thought of a clean way to support nesting expandable components within other expandable components. The parent expandable wrapper does not currently have a way of dynamically detecting a height change in the content after &lt;code&gt;:component-did-mount&lt;/code&gt;. &lt;br&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a name=&quot;summary&quot;&gt;&lt;/a&gt;Summary&lt;/h2&gt;&lt;p&gt;This may seem like a lot of code for a pretty small feature, but this component is very flexible. No height needs to be hard-coded to achieve the animation so you can use content of any size and it will work. Anything can be placed in as a toggle component, so this can be implemented as a button that reveals a div or a div that expands to show further information when clicked etc.&lt;/p&gt;&lt;h3&gt;&lt;a name=&quot;to&amp;#95;do&quot;&gt;&lt;/a&gt;TO DO&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Right now I have not thought of a clean way to support nesting expandable components within other expandable components. The parent expandable wrapper does not currently have a way of dynamically detecting a height change in the content after &lt;code&gt;:component-did-mount&lt;/code&gt;. &lt;br&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;
 </description>
 <enclosure>
 
