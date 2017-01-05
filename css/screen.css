@@ -33,6 +33,10 @@ a:hover {
 	color: #555 !important;
 }
 
+.bold {
+  font-weight: bold;
+}
+
 .date {
 	font-family: "Source Code Pro", monospace !important;
 }
